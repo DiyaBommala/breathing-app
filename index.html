@@ -272,6 +272,41 @@ function buildPhases(ex){
   }
   return p;
 }
+  function showCountdown(callback){
+  const lbl = document.getElementById('phase-lbl');
+  const circle = document.getElementById('circle');
+  const counter = document.getElementById('breath-counter');
+  const exName = document.getElementById('ex-name-lbl');
+
+  // set up the screen to show countdown
+  goTo('s-breathing');
+  circle.style.backgroundColor = '#333';
+  circle.style.width = '160px';
+  circle.style.height = '160px';
+  circleSize = 160;
+  targetSize = 160;
+  counter.textContent = '';
+  exName.textContent = currentEx.name;
+
+  const steps = ['3', '2', '1', 'GO'];
+  const colors = ['#555', '#888', '#aaa', '#00cc44'];
+  let i = 0;
+
+  function tick(){
+    lbl.textContent = steps[i];
+    lbl.style.color = colors[i];
+    document.getElementById('timer-num').textContent = '';
+    document.getElementById('pace-lbl').textContent = '';
+    i++;
+    if(i < steps.length){
+      setTimeout(tick, 1000);
+    } else {
+      // countdown done — start the real exercise
+      setTimeout(callback, 300);
+    }
+  }
+  tick();
+}
 
 function startExercise(){
   goTo('s-breathing');
@@ -281,7 +316,7 @@ function startExercise(){
   bpmTotal=0;bpmReadingCount=0;circleSize=120;targetSize=120;
   sendCommand('START');
   startCircleAnimation();
-  runPhase();
+  showCountdown(() => runPhase()); // ← wraps runPhase in countdown
 }
 
 function runPhase(){
