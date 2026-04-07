@@ -10,34 +10,27 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFo
 body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .screen{width:100%;max-width:390px;height:100vh;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;text-align:center;position:absolute;top:0;left:50%;transform:translateX(-50%)}
 .screen.active{display:flex}
-
-/* connecting */
 @keyframes spin{to{transform:rotate(360deg)}}
 .spinner{width:44px;height:44px;border:3px solid #333;border-top-color:#fff;border-radius:50%;animation:spin .9s linear infinite;margin-bottom:20px}
 .conn-text{font-size:18px;font-weight:600}
 .conn-sub{color:#555;font-size:13px;margin-top:8px}
-
-/* tutorial */
 .tut-row{display:flex;align-items:center;gap:14px;margin:10px 0;text-align:left;width:100%}
 .tut-dot{width:30px;height:30px;border-radius:50%;flex-shrink:0}
 .tut-text{color:#aaa;font-size:14px}
 .info-box{background:#161625;border-radius:12px;padding:14px 16px;width:100%;margin-top:16px;text-align:left}
 .info-label{color:#666;font-size:11px;margin-bottom:6px;letter-spacing:1px}
 .info-text{color:#aaa;font-size:13px}
-
-/* exercises */
 .ex-card{width:100%;background:#161625;border:1.5px solid #2a2a3a;border-radius:14px;padding:16px;margin:6px 0;cursor:pointer;text-align:left;transition:border-color .2s}
 .ex-card.sel{border-color:#4466ff}
 .ex-name{color:#fff;font-size:15px;font-weight:600}
 .ex-desc{color:#666;font-size:12px;margin-top:4px}
+.ex-duration{color:#555;font-size:11px;margin-top:3px}
 .ex-tags{display:flex;gap:6px;margin-top:8px}
 .tag{font-size:10px;padding:3px 8px;border-radius:99px;font-weight:500}
 .t-blue{background:#0a1428;color:#4488ff}
 .t-green{background:#0a2a14;color:#3dba6f}
 .t-yellow{background:#2a2000;color:#ccaa00}
 .t-red{background:#2a0a0a;color:#ff6644}
-
-/* breathing screen */
 .phase-label{font-size:30px;font-weight:700;letter-spacing:6px;margin-bottom:12px;transition:color .5s;min-height:40px}
 .circle-wrap{width:240px;height:240px;display:flex;align-items:center;justify-content:center;margin:8px 0}
 .circle{border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:background-color .5s ease}
@@ -46,8 +39,6 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
 .pace-label{font-size:16px;font-weight:600;letter-spacing:2px;color:#ff4444;min-height:24px;margin-top:8px}
 .breath-counter{color:#555;font-size:12px;margin-top:6px;min-height:18px}
 .ex-name-label{color:#444;font-size:12px;margin-top:4px}
-
-/* results */
 .stat-card{width:100%;background:#161625;border-radius:12px;padding:16px;margin-bottom:12px}
 .stat-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .stat-row:last-child{margin-bottom:0}
@@ -56,8 +47,6 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
 .feedback-box{width:100%;background:#161625;border-radius:12px;padding:16px;margin-bottom:16px;text-align:left}
 .feedback-label{color:#666;font-size:11px;letter-spacing:1px;margin-bottom:8px}
 .feedback-text{color:#fff;font-size:14px;line-height:1.5}
-
-/* history */
 .hist-list{width:100%;overflow-y:auto;max-height:60vh}
 .hist-card{width:100%;background:#161625;border:1px solid #2a2a3a;border-radius:12px;padding:14px 16px;margin-bottom:10px}
 .hist-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
@@ -67,8 +56,6 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
 .hist-stat{color:#aaa;font-size:12px}
 .hist-badge{color:#ff4444;font-size:11px;font-weight:600}
 .no-history{color:#555;font-size:14px;margin-top:20px}
-
-/* buttons */
 .btn{width:100%;padding:15px;border:none;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;margin-top:10px;letter-spacing:0.5px;transition:opacity .2s}
 .btn:active{opacity:0.8}
 .btn-primary{background:#3a3aff;color:#fff}
@@ -76,21 +63,15 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
 .btn-ghost{background:#161625;color:#aaa;border:1px solid #2a2a3a}
 .btn-row{display:flex;gap:10px;width:100%;margin-top:10px}
 .btn-row .btn{margin-top:0}
-
-/* status */
-.status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
-.dot-green{background:#3dba6f}
-.dot-gray{background:#555}
-.ble-status{position:absolute;top:16px;right:16px;font-size:12px;color:#555;display:flex;align-items:center}
-
-/* page title */
 .page-title{font-size:18px;font-weight:600;margin-bottom:4px}
 .page-sub{color:#666;font-size:13px;margin-bottom:20px}
+.ble-status{position:absolute;top:16px;right:16px;font-size:12px;color:#555;display:flex;align-items:center}
+.status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px}
+.dot-green{background:#3dba6f}
 </style>
 </head>
 <body>
 
-<!-- CONNECTING SCREEN -->
 <div class="screen active" id="s-connecting">
   <div class="spinner"></div>
   <div class="conn-text">Finding device...</div>
@@ -99,7 +80,6 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
   <div id="scan-status" style="color:#555;font-size:13px;margin-top:12px"></div>
 </div>
 
-<!-- CONNECTED FLASH SCREEN -->
 <div class="screen" id="s-connected">
   <div style="width:56px;height:56px;border-radius:50%;background:#0a2a14;display:flex;align-items:center;justify-content:center;margin-bottom:20px">
     <div style="width:24px;height:24px;border-radius:50%;background:#3dba6f"></div>
@@ -108,11 +88,8 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
   <div class="conn-sub" style="margin-top:8px">BreathingDevice found</div>
 </div>
 
-<!-- TUTORIAL SCREEN -->
 <div class="screen" id="s-tutorial">
-  <div class="ble-status" id="ble-indicator-tutorial">
-    <span class="status-dot dot-green"></span>Connected
-  </div>
+  <div class="ble-status"><span class="status-dot dot-green"></span>Connected</div>
   <div class="page-title">How it works</div>
   <div class="page-sub">The circle color tells you what to do</div>
   <div class="tut-row"><div class="tut-dot" style="background:#00cc44"></div><div class="tut-text">Green — Inhale slowly through your nose</div></div>
@@ -126,24 +103,26 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
   <button class="btn btn-ghost" onclick="goTo('s-history');loadHistory()">View history</button>
 </div>
 
-<!-- EXERCISE SELECTOR SCREEN -->
 <div class="screen" id="s-exercises">
   <div class="ble-status"><span class="status-dot dot-green"></span>Connected</div>
   <div class="page-title">Choose exercise</div>
-  <div class="page-sub">Select one to begin</div>
+  <div class="page-sub">Each session is approximately 1 minute</div>
   <div class="ex-card sel" onclick="selectEx(this,0)">
     <div class="ex-name">Box Breathing</div>
     <div class="ex-desc">Inhale 4s · Hold 4s · Exhale 4s · Hold 4s</div>
+    <div class="ex-duration">3 cycles · ~48 seconds</div>
     <div class="ex-tags"><span class="tag t-blue">Calming</span><span class="tag t-green">Beginner</span></div>
   </div>
   <div class="ex-card" onclick="selectEx(this,1)">
     <div class="ex-name">4-7-8 Breathing</div>
     <div class="ex-desc">Inhale 4s · Hold 7s · Exhale 8s</div>
+    <div class="ex-duration">3 cycles · ~57 seconds</div>
     <div class="ex-tags"><span class="tag t-blue">Relaxing</span><span class="tag t-yellow">Sleep aid</span></div>
   </div>
   <div class="ex-card" onclick="selectEx(this,2)">
     <div class="ex-name">Cyclic Hyperventilation</div>
     <div class="ex-desc">25 rapid breath cycles · 20s breath hold</div>
+    <div class="ex-duration">25 cycles + 20s hold · ~95 seconds</div>
     <div class="ex-tags"><span class="tag t-red">Alertness</span><span class="tag t-yellow">Advanced</span></div>
   </div>
   <div class="btn-row" style="margin-top:16px">
@@ -152,7 +131,6 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
   </div>
 </div>
 
-<!-- BREATHING SCREEN -->
 <div class="screen" id="s-breathing">
   <div class="phase-label" id="phase-lbl">INHALE</div>
   <div class="circle-wrap">
@@ -165,12 +143,11 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
   <div class="breath-counter" id="breath-counter"></div>
   <div class="ex-name-label" id="ex-name-lbl">Box Breathing</div>
   <div class="btn-row" style="margin-top:24px">
-    <button class="btn btn-ghost" onclick="stopExercise()">Change</button>
-    <button class="btn btn-stop" onclick="stopExercise()">Stop</button>
+    <button class="btn btn-ghost" onclick="stopExercise(false)">Change</button>
+    <button class="btn btn-stop" onclick="stopExercise(true)">Stop</button>
   </div>
 </div>
 
-<!-- RESULTS SCREEN -->
 <div class="screen" id="s-results">
   <div class="page-title">Session complete</div>
   <div class="page-sub" id="res-exname">Box Breathing</div>
@@ -195,7 +172,6 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
   <button class="btn btn-ghost" onclick="goTo('s-history');loadHistory()">View history</button>
 </div>
 
-<!-- HISTORY SCREEN -->
 <div class="screen" id="s-history">
   <div class="page-title">History</div>
   <div class="hist-list" id="history-list">
@@ -205,366 +181,214 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
 </div>
 
 <script>
-// ── UUID CONSTANTS ────────────────────────────────────
-// Must match Arduino sketch exactly
 const SERVICE_UUID = '12345678-1234-1234-1234-123456789abc';
 const RESP_UUID    = '12345678-1234-1234-1234-123456789001';
 const CMD_UUID     = '12345678-1234-1234-1234-123456789003';
 const DEVICE_NAME  = 'BreathingDevice';
 
-// ── EXERCISE DEFINITIONS ──────────────────────────────
 const EXERCISES = [
-  { name:'Box Breathing',          inhale:4,  hold1:4, exhale:4,  hold2:4,  minBPM:3,  maxBPM:5,  cyclic:false },
-  { name:'4-7-8 Breathing',        inhale:4,  hold1:7, exhale:8,  hold2:0,  minBPM:2,  maxBPM:4,  cyclic:false },
-  { name:'Cyclic Hyperventilation', inhale:1.5,hold1:0, exhale:1.5,hold2:0, minBPM:30, maxBPM:50, cyclic:true, cycles:25, finalHold:20 },
+  { name:'Box Breathing',           inhale:4,   hold1:4, exhale:4,   hold2:4, minBPM:2, maxBPM:6,  cyclic:false, cycles:3          },
+  { name:'4-7-8 Breathing',         inhale:4,   hold1:7, exhale:8,   hold2:0, minBPM:2, maxBPM:4,  cyclic:false, cycles:3          },
+  { name:'Cyclic Hyperventilation', inhale:1.5, hold1:0, exhale:1.5, hold2:0, minBPM:15,maxBPM:30, cyclic:true,  cycles:25, finalHold:20 },
 ];
 
 const COLORS = { INHALE:'#00cc44', HOLD:'#ffd700', EXHALE:'#3399ff' };
 
-// ── BLE STATE ─────────────────────────────────────────
-let bleDevice       = null;
-let bleServer       = null;
-let respCharacteristic = null;
-let cmdCharacteristic  = null;
-let bleConnected    = false;
+let bleDevice=null,cmdChar=null,bleConnected=false;
+let currentEx=EXERCISES[0];
+let phases=[],phaseIdx=0,phaseTimer=null,countdownInterval=null;
+let circleAnim=null,circleSize=120,targetSize=120;
+let breathCount=0,countdown=4;
+let tooFastCount=0,tooSlowCount=0,bpmTotal=0,bpmReadingCount=0;
 
-// ── SESSION STATE ─────────────────────────────────────
-let currentEx       = EXERCISES[0];
-let phases          = [];
-let phaseIdx        = 0;
-let phaseTimer      = null;
-let countdownTimer  = null;
-let circleAnim      = null;
-let circleSize      = 120;
-let targetSize      = 120;
-let breathCount     = 0;
-let countdown       = 4;
-let tooFastCount    = 0;
-let tooSlowCount    = 0;
-let bpmTotal        = 0;
-let bpmReadingCount = 0;
-let lastRespRate    = 0;
-let sessionHistory  = JSON.parse(localStorage.getItem('sessions') || '[]');
-
-// ── NAVIGATION ────────────────────────────────────────
-function goTo(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-// ── BLE: SCAN AND CONNECT ─────────────────────────────
-// Uses Web Bluetooth API — works in Bluefy on iPhone
-async function startScan() {
-  const status = document.getElementById('scan-status');
-  try {
-    status.textContent = 'Scanning for BreathingDevice...';
-
-    bleDevice = await navigator.bluetooth.requestDevice({
-      filters: [{ name: DEVICE_NAME }],
-      optionalServices: [SERVICE_UUID]
-    });
-
-    status.textContent = 'Connecting...';
-    bleServer = await bleDevice.gatt.connect();
-
-    const service = await bleServer.getPrimaryService(SERVICE_UUID);
-
-    // Subscribe to respiration rate notifications from Arduino
-    respCharacteristic = await service.getCharacteristic(RESP_UUID);
-    await respCharacteristic.startNotifications();
-    respCharacteristic.addEventListener('characteristicvaluechanged', onBPMReceived);
-
-    // Get command characteristic for sending START/STOP
-    cmdCharacteristic = await service.getCharacteristic(CMD_UUID);
-
-    bleConnected = true;
-
-    // Handle unexpected disconnection
-    bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
-
-    // Show connected flash screen then go to tutorial
+async function startScan(){
+  const status=document.getElementById('scan-status');
+  try{
+    status.textContent='Scanning for BreathingDevice...';
+    bleDevice=await navigator.bluetooth.requestDevice({filters:[{name:DEVICE_NAME}],optionalServices:[SERVICE_UUID]});
+    status.textContent='Connecting...';
+    const server=await bleDevice.gatt.connect();
+    const service=await server.getPrimaryService(SERVICE_UUID);
+    const respChar=await service.getCharacteristic(RESP_UUID);
+    await respChar.startNotifications();
+    respChar.addEventListener('characteristicvaluechanged',onBPMReceived);
+    cmdChar=await service.getCharacteristic(CMD_UUID);
+    bleConnected=true;
+    bleDevice.addEventListener('gattserverdisconnected',onDisconnected);
     goTo('s-connected');
-    setTimeout(() => goTo('s-tutorial'), 1500);
-
-  } catch (err) {
-    status.textContent = 'Could not connect — try again. (' + err.message + ')';
-    console.log('BLE error:', err);
+    setTimeout(()=>goTo('s-tutorial'),1500);
+  }catch(err){
+    status.textContent='Could not connect — try again. ('+err.message+')';
   }
 }
 
-// ── BLE: RECEIVE BPM FROM ARDUINO ────────────────────
-// Fires every time Arduino writes a new BPM value
-// Decodes 4 bytes little-endian float → BPM number
-function onBPMReceived(event) {
-  const value = event.target.value;
-  const bpm = value.getFloat32(0, true);  // true = little-endian
-  lastRespRate = parseFloat(bpm.toFixed(1));
-
-  // Track for session average
-  if (lastRespRate > 0) {
-    bpmTotal += lastRespRate;
-    bpmReadingCount++;
-  }
-
-  // Check pace against current exercise thresholds
-  const pace = paceText(lastRespRate);
-  document.getElementById('pace-lbl').textContent = pace;
-  if (pace === 'TOO FAST') tooFastCount++;
-  if (pace === 'SLOW DOWN') tooSlowCount++;
+function onBPMReceived(event){
+  const bpm=parseFloat(event.target.value.getFloat32(0,true).toFixed(1));
+  if(bpm>0){bpmTotal+=bpm;bpmReadingCount++;}
+  const pace=paceText(bpm);
+  const el=document.getElementById('pace-lbl');
+  if(el) el.textContent=pace;
+  if(pace==='TOO FAST') tooFastCount++;
+  if(pace==='SLOW DOWN') tooSlowCount++;
 }
 
-// ── BLE: SEND COMMAND TO ARDUINO ──────────────────────
-// Sends START or STOP string to Arduino command characteristic
-async function sendCommand(cmd) {
-  if (!cmdCharacteristic || !bleConnected) return;
-  try {
-    const encoder = new TextEncoder();
-    await cmdCharacteristic.writeValue(encoder.encode(cmd));
-  } catch (err) {
-    console.log('Send error:', err);
-  }
+async function sendCommand(cmd){
+  if(!cmdChar||!bleConnected) return;
+  try{ await cmdChar.writeValue(new TextEncoder().encode(cmd)); }
+  catch(e){ console.log('Send error:',e); }
 }
 
-// ── BLE: HANDLE DISCONNECT ───────────────────────────
-function onDisconnected() {
-  bleConnected = false;
-  console.log('Arduino disconnected');
-  // Save partial session if one was running
-  if (phaseTimer) {
-    clearAllTimers();
-    saveSession(false);
-    goTo('s-results');
-  }
+function onDisconnected(){
+  bleConnected=false;
+  if(phaseTimer){ clearAllTimers(); saveSession(false); showResults(); }
 }
 
-// ── EXERCISE SELECTOR ────────────────────────────────
-function selectEx(el, idx) {
-  document.querySelectorAll('.ex-card').forEach(c => c.classList.remove('sel'));
+function selectEx(el,idx){
+  document.querySelectorAll('.ex-card').forEach(c=>c.classList.remove('sel'));
   el.classList.add('sel');
-  currentEx = EXERCISES[idx];
+  currentEx=EXERCISES[idx];
 }
 
-// ── BUILD PHASE ARRAY ────────────────────────────────
-// Creates flat list of phases for the exercise timer loop
-function buildPhases(ex) {
-  const p = [];
-  if (ex.cyclic) {
-    // Cyclic Hyperventilation: 25 rapid inhale/exhale cycles then 20s hold
-    for (let i = 0; i < ex.cycles; i++) {
-      p.push({ name:'INHALE', dur:ex.inhale, color:COLORS.INHALE, target:200, cycleNum:i+1 });
-      p.push({ name:'EXHALE', dur:ex.exhale, color:COLORS.EXHALE, target:120, cycleNum:i+1 });
+function buildPhases(ex){
+  const p=[];
+  if(ex.cyclic){
+    for(let i=0;i<ex.cycles;i++){
+      p.push({name:'INHALE',dur:ex.inhale,color:COLORS.INHALE,target:200,cycleNum:i+1});
+      p.push({name:'EXHALE',dur:ex.exhale,color:COLORS.EXHALE,target:120,cycleNum:i+1});
     }
-    p.push({ name:'HOLD', dur:ex.finalHold, color:COLORS.HOLD, target:160, finalHold:true });
+    p.push({name:'HOLD',dur:ex.finalHold,color:COLORS.HOLD,target:160,finalHold:true});
   } else {
-    p.push({ name:'INHALE', dur:ex.inhale, color:COLORS.INHALE, target:230 });
-    if (ex.hold1 > 0) p.push({ name:'HOLD', dur:ex.hold1, color:COLORS.HOLD, target:230 });
-    p.push({ name:'EXHALE', dur:ex.exhale, color:COLORS.EXHALE, target:120 });
-    if (ex.hold2 > 0) p.push({ name:'HOLD', dur:ex.hold2, color:COLORS.HOLD, target:120 });
+    for(let c=0;c<ex.cycles;c++){
+      p.push({name:'INHALE',dur:ex.inhale,color:COLORS.INHALE,target:230,cycleNum:c+1});
+      if(ex.hold1>0) p.push({name:'HOLD',dur:ex.hold1,color:COLORS.HOLD,target:230,cycleNum:c+1});
+      p.push({name:'EXHALE',dur:ex.exhale,color:COLORS.EXHALE,target:120,cycleNum:c+1});
+      if(ex.hold2>0) p.push({name:'HOLD',dur:ex.hold2,color:COLORS.HOLD,target:120,cycleNum:c+1});
+    }
   }
   return p;
 }
 
-// ── START EXERCISE ───────────────────────────────────
-function startExercise() {
+function startExercise(){
   goTo('s-breathing');
-  document.getElementById('ex-name-lbl').textContent = currentEx.name;
-
-  // Reset all session tracking variables
-  phases          = buildPhases(currentEx);
-  phaseIdx        = 0;
-  breathCount     = 0;
-  tooFastCount    = 0;
-  tooSlowCount    = 0;
-  bpmTotal        = 0;
-  bpmReadingCount = 0;
-  circleSize      = 120;
-  targetSize      = 120;
-
-  // Tell Arduino to start sending BPM
+  document.getElementById('ex-name-lbl').textContent=currentEx.name;
+  phases=buildPhases(currentEx);
+  phaseIdx=0;breathCount=0;tooFastCount=0;tooSlowCount=0;
+  bpmTotal=0;bpmReadingCount=0;circleSize=120;targetSize=120;
   sendCommand('START');
-
   startCircleAnimation();
   runPhase();
 }
 
-// ── PHASE RUNNER ─────────────────────────────────────
-// Advances through phases using setTimeout loop
-// Each phase: update UI → animate circle → countdown → next phase
-function runPhase() {
-  if (phaseIdx >= phases.length) {
-    // Exercise complete — all phases done
-    stopExercise();
-    return;
-  }
-
-  const p = phases[phaseIdx];
-
-  // Update phase label and circle color
-  const lbl = document.getElementById('phase-lbl');
-  lbl.textContent  = p.name;
-  lbl.style.color  = p.color;
-  document.getElementById('circle').style.backgroundColor = p.color;
-
-  // Set circle target size for animation
-  targetSize = p.target;
-
-  // Update breath counter for cyclic hyperventilation
-  if (currentEx.cyclic && !p.finalHold) {
-    document.getElementById('breath-counter').textContent =
-      'Breath ' + p.cycleNum + ' of ' + currentEx.cycles;
-  } else if (p.finalHold) {
-    document.getElementById('breath-counter').textContent = 'Final breath hold';
+function runPhase(){
+  if(phaseIdx>=phases.length){stopExercise(true);return;}
+  const p=phases[phaseIdx];
+  const lbl=document.getElementById('phase-lbl');
+  lbl.textContent=p.name;lbl.style.color=p.color;
+  document.getElementById('circle').style.backgroundColor=p.color;
+  targetSize=p.target;
+  if(currentEx.cyclic&&!p.finalHold){
+    document.getElementById('breath-counter').textContent='Breath '+p.cycleNum+' of '+currentEx.cycles;
+  } else if(p.finalHold){
+    document.getElementById('breath-counter').textContent='Final breath hold';
   } else {
-    document.getElementById('breath-counter').textContent = '';
+    document.getElementById('breath-counter').textContent='Cycle '+p.cycleNum+' of '+currentEx.cycles;
   }
-
-  // Start countdown timer
-  countdown = Math.ceil(p.dur);
-  document.getElementById('timer-num').textContent = countdown;
-
-  countdownTimer = setInterval(() => {
+  countdown=Math.ceil(p.dur);
+  document.getElementById('timer-num').textContent=countdown;
+  countdownInterval=setInterval(()=>{
     countdown--;
-    if (countdown >= 0) {
-      document.getElementById('timer-num').textContent = countdown;
+    if(countdown>=0) document.getElementById('timer-num').textContent=countdown;
+  },1000);
+  phaseTimer=setTimeout(()=>{
+    clearInterval(countdownInterval);
+    if(!currentEx.cyclic){
+      const ppc=phases.length/currentEx.cycles;
+      if((phaseIdx+1)%ppc===0) breathCount++;
+    } else {
+      if(!p.finalHold&&(phaseIdx+1)%2===0) breathCount++;
     }
-  }, 1000);
-
-  // Move to next phase after duration
-  phaseTimer = setTimeout(() => {
-    clearInterval(countdownTimer);
     phaseIdx++;
-
-    // Count complete breath cycles for non-cyclic exercises
-    if (!currentEx.cyclic && phaseIdx > 0 && phaseIdx % phases.length === 0) {
-      breathCount++;
-    }
-    // Count cycles for cyclic exercises (every 2 phases = 1 breath)
-    if (currentEx.cyclic && phaseIdx % 2 === 0 && phaseIdx <= currentEx.cycles * 2) {
-      breathCount++;
-    }
-
     runPhase();
-  }, p.dur * 1000);
+  },p.dur*1000);
 }
 
-// ── CIRCLE ANIMATION LOOP ────────────────────────────
-// Smoothly interpolates circle size toward target each frame
-function startCircleAnimation() {
-  if (circleAnim) cancelAnimationFrame(circleAnim);
-  function frame() {
-    const diff = targetSize - circleSize;
-    if (Math.abs(diff) > 0.3) {
-      circleSize += diff * 0.05;
-      const c = document.getElementById('circle');
-      if (c) {
-        c.style.width  = circleSize + 'px';
-        c.style.height = circleSize + 'px';
-      }
+function startCircleAnimation(){
+  if(circleAnim) cancelAnimationFrame(circleAnim);
+  function frame(){
+    const diff=targetSize-circleSize;
+    if(Math.abs(diff)>0.3){
+      circleSize+=diff*0.05;
+      const c=document.getElementById('circle');
+      if(c){c.style.width=circleSize+'px';c.style.height=circleSize+'px';}
     }
-    circleAnim = requestAnimationFrame(frame);
+    circleAnim=requestAnimationFrame(frame);
   }
   frame();
 }
 
-// ── PACE FEEDBACK ────────────────────────────────────
-// Compares live BPM from Arduino against exercise target range
-function paceText(bpm) {
-  if (!bpm || bpm === 0) return '';
-  if (bpm > currentEx.maxBPM) return 'TOO FAST';
-  if (bpm < currentEx.minBPM) return 'SLOW DOWN';
+function paceText(bpm){
+  if(!bpm||bpm===0) return '';
+  if(bpm>currentEx.maxBPM) return 'TOO FAST';
+  if(bpm<currentEx.minBPM) return 'SLOW DOWN';
   return '';
 }
 
-// ── FEEDBACK MESSAGE ─────────────────────────────────
-// End of session advice based on tooFast and tooSlow counts
-function feedbackMessage() {
-  if (tooFastCount >= 3 && tooSlowCount >= 3)
-    return 'Try to match the pace of the circle more consistently next time.';
-  if (tooFastCount >= 3)
-    return 'Try to slow down your breathing a little next time.';
-  if (tooSlowCount >= 3)
-    return 'Try to speed up your breathing a little next time.';
+function feedbackMessage(){
+  if(tooFastCount>=3&&tooSlowCount>=3) return 'Try to match the pace of the circle more consistently next time.';
+  if(tooFastCount>=3) return 'Try to slow down your breathing a little next time.';
+  if(tooSlowCount>=3) return 'Try to speed up your breathing a little next time.';
   return 'Great session — your pace was well matched!';
 }
 
-// ── STOP EXERCISE ────────────────────────────────────
-function stopExercise() {
+function stopExercise(wasComplete){
   clearAllTimers();
   sendCommand('STOP');
-  saveSession(true);
+  saveSession(wasComplete!==false);
+  showResults();
+}
 
-  // Populate results screen
-  const avgBPM = bpmReadingCount > 0
-    ? parseFloat((bpmTotal / bpmReadingCount).toFixed(1))
-    : 0;
-
-  document.getElementById('res-exname').textContent  = currentEx.name;
-  document.getElementById('res-count').textContent   = Math.max(breathCount, 1);
-  document.getElementById('res-bpm').textContent     = avgBPM > 0 ? avgBPM : '—';
-  document.getElementById('res-feedback').textContent = feedbackMessage();
-
+function showResults(){
+  const avgBPM=bpmReadingCount>0?parseFloat((bpmTotal/bpmReadingCount).toFixed(1)):0;
+  document.getElementById('res-exname').textContent=currentEx.name;
+  document.getElementById('res-count').textContent=Math.max(breathCount,1);
+  document.getElementById('res-bpm').textContent=avgBPM>0?avgBPM:'—';
+  document.getElementById('res-feedback').textContent=feedbackMessage();
   goTo('s-results');
 }
 
-// ── CLEAR ALL TIMERS ─────────────────────────────────
-function clearAllTimers() {
-  if (phaseTimer)    clearTimeout(phaseTimer);
-  if (countdownTimer) clearInterval(countdownTimer);
-  if (circleAnim)    cancelAnimationFrame(circleAnim);
-  phaseTimer = null;
-  countdownTimer = null;
+function clearAllTimers(){
+  if(phaseTimer) clearTimeout(phaseTimer);
+  if(countdownInterval) clearInterval(countdownInterval);
+  if(circleAnim) cancelAnimationFrame(circleAnim);
+  phaseTimer=null;countdownInterval=null;
 }
 
-// ── SAVE SESSION TO LOCALSTORAGE ─────────────────────
-// Saves session record — complete=false if BLE dropped mid session
-function saveSession(wasComplete) {
-  const avgBPM = bpmReadingCount > 0
-    ? parseFloat((bpmTotal / bpmReadingCount).toFixed(1))
-    : 0;
-
-  const record = {
-    date:         new Date().toLocaleDateString(),
-    exerciseName: currentEx.name,
-    avgBPM:       avgBPM,
-    breathCount:  Math.max(breathCount, 1),
-    complete:     wasComplete,
-  };
-
-  sessionHistory.unshift(record);
-  localStorage.setItem('sessions', JSON.stringify(sessionHistory));
+function saveSession(wasComplete){
+  const avgBPM=bpmReadingCount>0?parseFloat((bpmTotal/bpmReadingCount).toFixed(1)):0;
+  const record={date:new Date().toLocaleDateString(),exerciseName:currentEx.name,avgBPM,breathCount:Math.max(breathCount,1),complete:wasComplete};
+  const existing=JSON.parse(localStorage.getItem('sessions')||'[]');
+  existing.unshift(record);
+  localStorage.setItem('sessions',JSON.stringify(existing));
 }
 
-// ── LOAD AND RENDER HISTORY ───────────────────────────
-function loadHistory() {
-  const list = document.getElementById('history-list');
-  const sessions = JSON.parse(localStorage.getItem('sessions') || '[]');
-
-  if (sessions.length === 0) {
-    list.innerHTML = '<div class="no-history">No sessions yet</div>';
-    return;
-  }
-
-  list.innerHTML = sessions.map(s => `
+function loadHistory(){
+  const list=document.getElementById('history-list');
+  const sessions=JSON.parse(localStorage.getItem('sessions')||'[]');
+  if(sessions.length===0){list.innerHTML='<div class="no-history">No sessions yet</div>';return;}
+  list.innerHTML=sessions.map(s=>`
     <div class="hist-card">
-      <div class="hist-row">
-        <span class="hist-name">${s.exerciseName}</span>
-        <span class="hist-date">${s.date}</span>
-      </div>
-      <div class="hist-row">
-        <span class="hist-stat">Avg BPM: ${s.avgBPM} · ${s.breathCount} breaths</span>
-        ${!s.complete ? '<span class="hist-badge">Connection lost</span>' : ''}
-      </div>
-    </div>
-  `).join('');
+      <div class="hist-row"><span class="hist-name">${s.exerciseName}</span><span class="hist-date">${s.date}</span></div>
+      <div class="hist-row"><span class="hist-stat">Avg BPM: ${s.avgBPM} · ${s.breathCount} breaths</span>${!s.complete?'<span class="hist-badge">Connection lost</span>':''}</div>
+    </div>`).join('');
 }
 
-// ── AUTO CONNECT ON LOAD ──────────────────────────────
-// Check if Web Bluetooth is supported (Bluefy supports it)
-window.addEventListener('load', () => {
-  if (!navigator.bluetooth) {
-    document.getElementById('scan-status').textContent =
-      'Web Bluetooth not supported. Please open in Bluefy.';
-  }
+window.addEventListener('load',()=>{
+  if(!navigator.bluetooth) document.getElementById('scan-status').textContent='Web Bluetooth not supported. Please open in Bluefy.';
 });
 </script>
 </body>
