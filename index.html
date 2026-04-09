@@ -97,7 +97,7 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
   <div class="tut-row"><div class="tut-dot" style="background:#3399ff"></div><div class="tut-text">Blue — Exhale slowly through your mouth</div></div>
   <div class="info-box">
     <div class="info-label">FEEDBACK</div>
-    <div class="info-text">TOO FAST or SLOW DOWN appears below the circle if your breathing doesn't match the guide.</div>
+    <div class="info-text">TOO FAST or TOO SLOW appears below the circle if your breathing doesn't match the guide.</div>
   </div>
   <button class="btn btn-primary" onclick="goTo('s-exercises')">Choose an exercise</button>
   <button class="btn btn-ghost" onclick="goTo('s-history');loadHistory()">View history</button>
@@ -156,10 +156,6 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
       <span class="stat-name">Breaths completed</span>
       <span class="stat-val" id="res-count">—</span>
     </div>
-    <div class="stat-row">
-      <span class="stat-name">Average BPM</span>
-      <span class="stat-val" id="res-bpm">—</span>
-    </div>
   </div>
   <div class="feedback-box">
     <div class="feedback-label">FEEDBACK</div>
@@ -182,24 +178,27 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
 
 <script>
 const SERVICE_UUID = '12345678-1234-1234-1234-123456789abc';
-const RESP_UUID    = '12345678-1234-1234-1234-123456789001';
+const VOLT_UUID    = '12345678-1234-1234-1234-123456789001';
+const DIR_UUID     = '12345678-1234-1234-1234-123456789002';
 const CMD_UUID     = '12345678-1234-1234-1234-123456789003';
 const DEVICE_NAME  = 'BreathingDevice';
 
 const EXERCISES = [
-  { name:'Box Breathing',           inhale:4,   hold1:4, exhale:4,   hold2:4, minBPM:2, maxBPM:6,  cyclic:false, cycles:3          },
-  { name:'4-7-8 Breathing',         inhale:4,   hold1:7, exhale:8,   hold2:0, minBPM:2, maxBPM:4,  cyclic:false, cycles:3          },
-  { name:'Cyclic Hyperventilation', inhale:1.5, hold1:0, exhale:1.5, hold2:0, minBPM:15,maxBPM:30, cyclic:true,  cycles:25, finalHold:20 },
+  { name:'Box Breathing',           inhale:4,   hold1:4, exhale:4,   hold2:4, cyclic:false, cycles:3          },
+  { name:'4-7-8 Breathing',         inhale:4,   hold1:7, exhale:8,   hold2:0, cyclic:false, cycles:3          },
+  { name:'Cyclic Hyperventilation', inhale:1.5, hold1:0, exhale:1.5, hold2:0, cyclic:true,  cycles:25, finalHold:20 },
 ];
 
 const COLORS = { INHALE:'#00cc44', HOLD:'#ffd700', EXHALE:'#3399ff' };
 
-let bleDevice=null,cmdChar=null,bleConnected=false;
+let bleDevice=null, cmdChar=null, bleConnected=false;
 let currentEx=EXERCISES[0];
 let phases=[],phaseIdx=0,phaseTimer=null,countdownInterval=null;
 let circleAnim=null,circleSize=120,targetSize=120;
 let breathCount=0,countdown=4;
-let tooFastCount=0,tooSlowCount=0,bpmTotal=0,bpmReadingCount=0;
+let tooFastCount=0,tooSlowCount=0;
+let stableCountApp=0;
+const STABLE_SLOW_THRESHOLD=5;
 
 function goTo(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -210,13 +209,18 @@ async function startScan(){
   const status=document.getElementById('scan-status');
   try{
     status.textContent='Scanning for BreathingDevice...';
-    bleDevice=await navigator.bluetooth.requestDevice({filters:[{name:DEVICE_NAME}],optionalServices:[SERVICE_UUID]});
+    bleDevice=await navigator.bluetooth.requestDevice({
+      filters:[{name:DEVICE_NAME}],
+      optionalServices:[SERVICE_UUID]
+    });
     status.textContent='Connecting...';
     const server=await bleDevice.gatt.connect();
     const service=await server.getPrimaryService(SERVICE_UUID);
-    const respChar=await service.getCharacteristic(RESP_UUID);
-    await respChar.startNotifications();
-    respChar.addEventListener('characteristicvaluechanged',onBPMReceived);
+
+    const dirChar=await service.getCharacteristic(DIR_UUID);
+    await dirChar.startNotifications();
+    dirChar.addEventListener('characteristicvaluechanged',onDirectionReceived);
+
     cmdChar=await service.getCharacteristic(CMD_UUID);
     bleConnected=true;
     bleDevice.addEventListener('gattserverdisconnected',onDisconnected);
@@ -227,14 +231,60 @@ async function startScan(){
   }
 }
 
-function onBPMReceived(event){
-  const bpm=parseFloat(event.target.value.getFloat32(0,true).toFixed(1));
-  if(bpm>0){bpmTotal+=bpm;bpmReadingCount++;}
-  const pace=paceText(bpm);
+// Receives voltage direction from Arduino
+// DROPPING = inhaling, RISING = exhaling, STABLE = not moving
+// Compares against current exercise phase from app timer
+function onDirectionReceived(event){
+  const dir=new TextDecoder().decode(event.target.value);
   const el=document.getElementById('pace-lbl');
-  if(el) el.textContent=pace;
+  if(!el) return;
+  if(phaseIdx>=phases.length) return;
+
+  const currentPhase=phases[phaseIdx].name;
+  let pace='';
+
+  // HOLD — no feedback at all, clear label and return
+  if(currentPhase==='HOLD'){
+    el.textContent='';
+    stableCountApp=0;
+    return;
+  }
+
+  if(currentPhase==='INHALE'){
+    // voltage should be DROPPING during inhale
+    if(dir==='RISING'){
+      // exhaling too early
+      pace='TOO FAST';
+      stableCountApp=0;
+    } else if(dir==='STABLE'){
+      // not inhaling — count consecutive stable readings
+      stableCountApp++;
+      if(stableCountApp>=STABLE_SLOW_THRESHOLD) pace='TOO SLOW';
+    } else {
+      // correctly dropping — reset stable counter
+      stableCountApp=0;
+    }
+  }
+
+  if(currentPhase==='EXHALE'){
+    // voltage should be RISING during exhale
+    if(dir==='DROPPING'){
+      // inhaling too early
+      pace='TOO FAST';
+      stableCountApp=0;
+    } else if(dir==='STABLE'){
+      // not exhaling — count consecutive stable readings
+      stableCountApp++;
+      if(stableCountApp>=STABLE_SLOW_THRESHOLD) pace='TOO SLOW';
+    } else {
+      // correctly rising — reset stable counter
+      stableCountApp=0;
+    }
+  }
+
+  el.textContent=pace;
   if(pace==='TOO FAST') tooFastCount++;
-  if(pace==='SLOW DOWN') tooSlowCount++;
+  if(pace==='TOO SLOW') tooSlowCount++;
 }
 
 async function sendCommand(cmd){
@@ -272,38 +322,27 @@ function buildPhases(ex){
   }
   return p;
 }
-  function showCountdown(callback){
-  const lbl = document.getElementById('phase-lbl');
-  const circle = document.getElementById('circle');
-  const counter = document.getElementById('breath-counter');
-  const exName = document.getElementById('ex-name-lbl');
 
-  // set up the screen to show countdown
-  goTo('s-breathing');
-  circle.style.backgroundColor = '#333';
-  circle.style.width = '160px';
-  circle.style.height = '160px';
-  circleSize = 160;
-  targetSize = 160;
-  counter.textContent = '';
-  exName.textContent = currentEx.name;
-
-  const steps = ['3', '2', '1', 'GO'];
-  const colors = ['#555', '#888', '#aaa', '#00cc44'];
-  let i = 0;
-
+function showCountdown(callback){
+  const lbl=document.getElementById('phase-lbl');
+  const circle=document.getElementById('circle');
+  document.getElementById('breath-counter').textContent='';
+  document.getElementById('ex-name-lbl').textContent=currentEx.name;
+  document.getElementById('pace-lbl').textContent='';
+  circle.style.backgroundColor='#333';
+  circle.style.width='160px';
+  circle.style.height='160px';
+  circleSize=160; targetSize=160;
+  const steps=['3','2','1','GO'];
+  const colors=['#555','#888','#aaa','#00cc44'];
+  let i=0;
   function tick(){
-    lbl.textContent = steps[i];
-    lbl.style.color = colors[i];
-    document.getElementById('timer-num').textContent = '';
-    document.getElementById('pace-lbl').textContent = '';
+    lbl.textContent=steps[i];
+    lbl.style.color=colors[i];
+    document.getElementById('timer-num').textContent='';
     i++;
-    if(i < steps.length){
-      setTimeout(tick, 1000);
-    } else {
-      // countdown done — start the real exercise
-      setTimeout(callback, 300);
-    }
+    if(i<steps.length){ setTimeout(tick,1000); }
+    else { setTimeout(callback,300); }
   }
   tick();
 }
@@ -312,20 +351,25 @@ function startExercise(){
   goTo('s-breathing');
   document.getElementById('ex-name-lbl').textContent=currentEx.name;
   phases=buildPhases(currentEx);
-  phaseIdx=0;breathCount=0;tooFastCount=0;tooSlowCount=0;
-  bpmTotal=0;bpmReadingCount=0;circleSize=120;targetSize=120;
+  phaseIdx=0; breathCount=0;
+  tooFastCount=0; tooSlowCount=0;
+  stableCountApp=0;
+  circleSize=120; targetSize=120;
   sendCommand('START');
   startCircleAnimation();
-  showCountdown(() => runPhase()); // ← wraps runPhase in countdown
+  showCountdown(()=>runPhase());
 }
 
 function runPhase(){
-  if(phaseIdx>=phases.length){stopExercise(true);return;}
+  if(phaseIdx>=phases.length){ stopExercise(true); return; }
   const p=phases[phaseIdx];
   const lbl=document.getElementById('phase-lbl');
-  lbl.textContent=p.name;lbl.style.color=p.color;
+  lbl.textContent=p.name; lbl.style.color=p.color;
   document.getElementById('circle').style.backgroundColor=p.color;
+  document.getElementById('pace-lbl').textContent='';
+  stableCountApp=0;
   targetSize=p.target;
+
   if(currentEx.cyclic&&!p.finalHold){
     document.getElementById('breath-counter').textContent='Breath '+p.cycleNum+' of '+currentEx.cycles;
   } else if(p.finalHold){
@@ -333,12 +377,14 @@ function runPhase(){
   } else {
     document.getElementById('breath-counter').textContent='Cycle '+p.cycleNum+' of '+currentEx.cycles;
   }
+
   countdown=Math.ceil(p.dur);
   document.getElementById('timer-num').textContent=countdown;
   countdownInterval=setInterval(()=>{
     countdown--;
     if(countdown>=0) document.getElementById('timer-num').textContent=countdown;
   },1000);
+
   phaseTimer=setTimeout(()=>{
     clearInterval(countdownInterval);
     if(!currentEx.cyclic){
@@ -366,13 +412,6 @@ function startCircleAnimation(){
   frame();
 }
 
-function paceText(bpm){
-  if(!bpm||bpm===0) return '';
-  if(bpm>currentEx.maxBPM) return 'TOO FAST';
-  if(bpm<currentEx.minBPM) return 'SLOW DOWN';
-  return '';
-}
-
 function feedbackMessage(){
   if(tooFastCount>=3&&tooSlowCount>=3) return 'Try to match the pace of the circle more consistently next time.';
   if(tooFastCount>=3) return 'Try to slow down your breathing a little next time.';
@@ -388,10 +427,8 @@ function stopExercise(wasComplete){
 }
 
 function showResults(){
-  const avgBPM=bpmReadingCount>0?parseFloat((bpmTotal/bpmReadingCount).toFixed(1)):0;
   document.getElementById('res-exname').textContent=currentEx.name;
   document.getElementById('res-count').textContent=Math.max(breathCount,1);
-  document.getElementById('res-bpm').textContent=avgBPM>0?avgBPM:'—';
   document.getElementById('res-feedback').textContent=feedbackMessage();
   goTo('s-results');
 }
@@ -400,12 +437,16 @@ function clearAllTimers(){
   if(phaseTimer) clearTimeout(phaseTimer);
   if(countdownInterval) clearInterval(countdownInterval);
   if(circleAnim) cancelAnimationFrame(circleAnim);
-  phaseTimer=null;countdownInterval=null;
+  phaseTimer=null; countdownInterval=null;
 }
 
 function saveSession(wasComplete){
-  const avgBPM=bpmReadingCount>0?parseFloat((bpmTotal/bpmReadingCount).toFixed(1)):0;
-  const record={date:new Date().toLocaleDateString(),exerciseName:currentEx.name,avgBPM,breathCount:Math.max(breathCount,1),complete:wasComplete};
+  const record={
+    date:new Date().toLocaleDateString(),
+    exerciseName:currentEx.name,
+    breathCount:Math.max(breathCount,1),
+    complete:wasComplete
+  };
   const existing=JSON.parse(localStorage.getItem('sessions')||'[]');
   existing.unshift(record);
   localStorage.setItem('sessions',JSON.stringify(existing));
@@ -414,16 +455,27 @@ function saveSession(wasComplete){
 function loadHistory(){
   const list=document.getElementById('history-list');
   const sessions=JSON.parse(localStorage.getItem('sessions')||'[]');
-  if(sessions.length===0){list.innerHTML='<div class="no-history">No sessions yet</div>';return;}
+  if(sessions.length===0){
+    list.innerHTML='<div class="no-history">No sessions yet</div>';
+    return;
+  }
   list.innerHTML=sessions.map(s=>`
     <div class="hist-card">
-      <div class="hist-row"><span class="hist-name">${s.exerciseName}</span><span class="hist-date">${s.date}</span></div>
-      <div class="hist-row"><span class="hist-stat">Avg BPM: ${s.avgBPM} · ${s.breathCount} breaths</span>${!s.complete?'<span class="hist-badge">Connection lost</span>':''}</div>
+      <div class="hist-row">
+        <span class="hist-name">${s.exerciseName}</span>
+        <span class="hist-date">${s.date}</span>
+      </div>
+      <div class="hist-row">
+        <span class="hist-stat">${s.breathCount} breaths completed</span>
+        ${!s.complete?'<span class="hist-badge">Connection lost</span>':''}
+      </div>
     </div>`).join('');
 }
 
 window.addEventListener('load',()=>{
-  if(!navigator.bluetooth) document.getElementById('scan-status').textContent='Web Bluetooth not supported. Please open in Bluefy.';
+  if(!navigator.bluetooth){
+    document.getElementById('scan-status').textContent='Web Bluetooth not supported. Please open in Bluefy.';
+  }
 });
 </script>
 </body>
