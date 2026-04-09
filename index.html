@@ -217,11 +217,14 @@ async function startScan(){
     const server=await bleDevice.gatt.connect();
     const service=await server.getPrimaryService(SERVICE_UUID);
 
+    // only subscribe to direction — that's all the app needs
     const dirChar=await service.getCharacteristic(DIR_UUID);
     await dirChar.startNotifications();
     dirChar.addEventListener('characteristicvaluechanged',onDirectionReceived);
 
+    // get command characteristic for START/STOP
     cmdChar=await service.getCharacteristic(CMD_UUID);
+
     bleConnected=true;
     bleDevice.addEventListener('gattserverdisconnected',onDisconnected);
     goTo('s-connected');
@@ -230,7 +233,6 @@ async function startScan(){
     status.textContent='Could not connect — try again. ('+err.message+')';
   }
 }
-
 // Receives voltage direction from Arduino
 // DROPPING = inhaling, RISING = exhaling, STABLE = not moving
 // Compares against current exercise phase from app timer
