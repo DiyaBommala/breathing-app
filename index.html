@@ -347,8 +347,10 @@ async function sendCommand(cmd){
 function onDisconnected(){
   bleConnected=false;
   if(phaseTimer){ clearAllTimers(); saveSession(false); showResults(); }
+  // go back to connecting screen with reconnect button visible
+  document.getElementById('scan-status').textContent='Disconnected — tap to reconnect';
+  goTo('s-connecting');
 }
-
 function selectEx(el,idx){
   document.querySelectorAll('.ex-card').forEach(c=>c.classList.remove('sel'));
   el.classList.add('sel');
