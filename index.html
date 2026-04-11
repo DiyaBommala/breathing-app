@@ -291,28 +291,43 @@ function onDirectionReceived(event){
   holdChangeCount=0;
 
   if(currentPhase==='INHALE'){
-    if(dir==='RISING'||dir==='STABLE'){
-      // wrong direction or stopped — TOO FAST
+    if(dir==='DROPPING'){
+      // correctly inhaling — reset everything
+      tooFastCountApp=0;
+      stableCountApp=0;
+    } else if(dir==='RISING'){
+      // already exhaling — skipped ahead = TOO FAST
       tooFastCountApp++;
       stableCountApp=0;
       if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
-    } else {
-      // correctly dropping — reset counters
-      tooFastCountApp=0;
+    } else if(dir==='STABLE'){
+      // stopped inhaling too early = TOO FAST
+      tooFastCountApp++;
       stableCountApp=0;
+      if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
     }
   }
 
   if(currentPhase==='EXHALE'){
-    if(dir==='DROPPING'||dir==='STABLE'){
-      // wrong direction or stopped — TOO FAST
+    if(dir==='RISING'){
+      // correctly exhaling — reset everything
+      tooFastCountApp=0;
+      stableCountApp=0;
+    } else if(dir==='DROPPING'){
+      tooFastCountApp++;
+      stableCountApp=0;
+      if(tooFastCountApp>=2 && tooFastCountApp<=4){
+        // brief dropping at start = still transitioning from inhale = TOO SLOW
+        pace='TOO SLOW';
+      } else if(tooFastCountApp>4){
+        // sustained dropping = actively inhaling during exhale = TOO FAST
+        pace='TOO FAST';
+      }
+    } else if(dir==='STABLE'){
+      // stopped exhaling too early = TOO FAST
       tooFastCountApp++;
       stableCountApp=0;
       if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
-    } else {
-      // correctly rising — reset counters
-      tooFastCountApp=0;
-      stableCountApp=0;
     }
   }
 
@@ -320,7 +335,7 @@ function onDirectionReceived(event){
   if(pace==='TOO FAST') tooFastCount++;
   if(pace==='TOO SLOW') tooSlowCount++;
 }
-
+  
 async function sendCommand(cmd){
   if(!cmdChar||!bleConnected) return;
   try{ await cmdChar.writeValue(new TextEncoder().encode(cmd)); }
