@@ -86,6 +86,7 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
   </div>
   <div class="conn-text" style="color:#3dba6f">Connected!</div>
   <div class="conn-sub" style="margin-top:8px">BreathingDevice found</div>
+  <div class="conn-sub" style="margin-top:12px;color:#888">Sit still for 2 seconds while device calibrates...</div>
 </div>
 
 <div class="screen" id="s-tutorial">
@@ -97,7 +98,7 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
   <div class="tut-row"><div class="tut-dot" style="background:#3399ff"></div><div class="tut-text">Blue — Exhale slowly through your mouth</div></div>
   <div class="info-box">
     <div class="info-label">FEEDBACK</div>
-    <div class="info-text">TOO FAST or TOO SLOW appears below the circle if your breathing doesn't match the guide.</div>
+    <div class="info-text">TOO FAST, TOO SLOW, or KEEP HOLDING! appears below the circle based on your breathing.</div>
   </div>
   <button class="btn btn-primary" onclick="goTo('s-exercises')">Choose an exercise</button>
   <button class="btn btn-ghost" onclick="goTo('s-history');loadHistory()">View history</button>
@@ -191,14 +192,22 @@ const EXERCISES = [
 
 const COLORS = { INHALE:'#00cc44', HOLD:'#ffd700', EXHALE:'#3399ff' };
 
-let bleDevice=null, cmdChar=null, bleConnected=false;
-let currentEx=EXERCISES[0];
+let bleDevice    = null;
+let cmdChar      = null;
+let bleConnected = false;
+let currentEx    = EXERCISES[0];
 let phases=[],phaseIdx=0,phaseTimer=null,countdownInterval=null;
 let circleAnim=null,circleSize=120,targetSize=120;
 let breathCount=0,countdown=4;
 let tooFastCount=0,tooSlowCount=0;
 let stableCountApp=0;
-const STABLE_SLOW_THRESHOLD=5;
+let tooFastCountApp=0;
+let holdChangeCount=0;
+
+// TOO FAST needs 4 consecutive wrong direction readings
+// TOO SLOW needs 2 consecutive stable readings — more sensitive
+const TOO_FAST_THRESHOLD = 4;
+const STABLE_SLOW_THRESHOLD = 2;
 
 function goTo(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -246,9 +255,12 @@ async function startScan(){
     bleConnected = false;
   }
 }
+
 // Receives voltage direction from Arduino
 // DROPPING = inhaling, RISING = exhaling, STABLE = not moving
-// Compares against current exercise phase from app timer
+// TOO FAST: wrong direction for 4 consecutive readings
+// TOO SLOW: stable for 2 consecutive readings — sensitive
+// KEEP HOLDING: moving for 5 consecutive readings during HOLD
 function onDirectionReceived(event){
   const dir=new TextDecoder().decode(event.target.value);
   console.log('Phase:', phases[phaseIdx]?.name, '| Dir:', dir);
@@ -260,7 +272,6 @@ function onDirectionReceived(event){
   let pace='';
 
   // HOLD phase — any movement triggers KEEP HOLDING!
-  // needs 5 consecutive moving readings before showing
   if(currentPhase==='HOLD'){
     if(dir==='DROPPING'||dir==='RISING'){
       holdChangeCount++;
@@ -277,14 +288,11 @@ function onDirectionReceived(event){
     return;
   }
 
-  // reset hold counter when not in hold phase
   holdChangeCount=0;
 
   if(currentPhase==='INHALE'){
-    // voltage should be DROPPING during inhale
-    // RISING = exhaling too early = TOO FAST
-    // STABLE = stopped inhaling too early = TOO FAST
     if(dir==='RISING'||dir==='STABLE'){
+      // wrong direction or stopped — TOO FAST
       tooFastCountApp++;
       stableCountApp=0;
       if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
@@ -296,52 +304,14 @@ function onDirectionReceived(event){
   }
 
   if(currentPhase==='EXHALE'){
-    // voltage should be RISING during exhale
-    // DROPPING = inhaling too early = TOO FAST
-    // STABLE = stopped exhaling too early = TOO FAST
     if(dir==='DROPPING'||dir==='STABLE'){
+      // wrong direction or stopped — TOO FAST
       tooFastCountApp++;
       stableCountApp=0;
       if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
     } else {
       // correctly rising — reset counters
       tooFastCountApp=0;
-      stableCountApp=0;
-    }
-  }
-
-  el.textContent=pace;
-  if(pace==='TOO FAST') tooFastCount++;
-}
-
-  if(currentPhase==='INHALE'){
-    // voltage should be DROPPING during inhale
-    if(dir==='RISING'){
-      // exhaling too early
-      pace='TOO FAST';
-      stableCountApp=0;
-    } else if(dir==='STABLE'){
-      // not inhaling — count consecutive stable readings
-      stableCountApp++;
-      if(stableCountApp>=STABLE_SLOW_THRESHOLD) pace='TOO SLOW';
-    } else {
-      // correctly dropping — reset stable counter
-      stableCountApp=0;
-    }
-  }
-
-  if(currentPhase==='EXHALE'){
-    // voltage should be RISING during exhale
-    if(dir==='DROPPING'){
-      // inhaling too early
-      pace='TOO FAST';
-      stableCountApp=0;
-    } else if(dir==='STABLE'){
-      // not exhaling — count consecutive stable readings
-      stableCountApp++;
-      if(stableCountApp>=STABLE_SLOW_THRESHOLD) pace='TOO SLOW';
-    } else {
-      // correctly rising — reset stable counter
       stableCountApp=0;
     }
   }
@@ -358,13 +328,19 @@ async function sendCommand(cmd){
 }
 
 function onDisconnected(){
-  bleConnected=false;
-  bleDevice=null;
-  cmdChar=null;
-  if(phaseTimer){ clearAllTimers(); saveSession(false); showResults(); }
+  bleConnected = false;
+  bleDevice    = null;
+  cmdChar      = null;
+  if(phaseTimer){
+    clearAllTimers();
+    saveSession(false);
+    showResults();
+    return;
+  }
   document.getElementById('scan-status').textContent='Disconnected — tap to reconnect';
   goTo('s-connecting');
 }
+
 function selectEx(el,idx){
   document.querySelectorAll('.ex-card').forEach(c=>c.classList.remove('sel'));
   el.classList.add('sel');
@@ -420,7 +396,7 @@ function startExercise(){
   phases=buildPhases(currentEx);
   phaseIdx=0; breathCount=0;
   tooFastCount=0; tooSlowCount=0;
-  stableCountApp=0;
+  stableCountApp=0; tooFastCountApp=0; holdChangeCount=0;
   circleSize=120; targetSize=120;
   sendCommand('START');
   startCircleAnimation();
@@ -435,6 +411,8 @@ function runPhase(){
   document.getElementById('circle').style.backgroundColor=p.color;
   document.getElementById('pace-lbl').textContent='';
   stableCountApp=0;
+  tooFastCountApp=0;
+  holdChangeCount=0;
   targetSize=p.target;
 
   if(currentEx.cyclic&&!p.finalHold){
