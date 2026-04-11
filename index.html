@@ -207,42 +207,43 @@ function goTo(id){
 
 async function startScan(){
   const status=document.getElementById('scan-status');
-  
-  // reset BLE state before every new scan attempt
-  bleDevice=null;
-  cmdChar=null;
-  bleConnected=false;
+
+  // fully reset all BLE state before every new scan
+  bleDevice    = null;
+  cmdChar      = null;
+  bleConnected = false;
 
   try{
     status.textContent='Scanning for BreathingDevice...';
-    bleDevice=await navigator.bluetooth.requestDevice({
-      filters:[{name:DEVICE_NAME}],
-      optionalServices:[SERVICE_UUID]
-  const status=document.getElementById('scan-status');
-  try{
-    status.textContent='Scanning for BreathingDevice...';
-    bleDevice=await navigator.bluetooth.requestDevice({
+
+    const device = await navigator.bluetooth.requestDevice({
       filters:[{name:DEVICE_NAME}],
       optionalServices:[SERVICE_UUID]
     });
-    status.textContent='Connecting...';
-    const server=await bleDevice.gatt.connect();
-    const service=await server.getPrimaryService(SERVICE_UUID);
 
-    // only subscribe to direction — that's all the app needs
-    const dirChar=await service.getCharacteristic(DIR_UUID);
+    bleDevice = device;
+    status.textContent='Connecting...';
+
+    const server  = await bleDevice.gatt.connect();
+    const service = await server.getPrimaryService(SERVICE_UUID);
+
+    const dirChar = await service.getCharacteristic(DIR_UUID);
     await dirChar.startNotifications();
     dirChar.addEventListener('characteristicvaluechanged',onDirectionReceived);
 
-    // get command characteristic for START/STOP
-    cmdChar=await service.getCharacteristic(CMD_UUID);
+    cmdChar      = await service.getCharacteristic(CMD_UUID);
+    bleConnected = true;
 
-    bleConnected=true;
     bleDevice.addEventListener('gattserverdisconnected',onDisconnected);
+
     goTo('s-connected');
     setTimeout(()=>goTo('s-tutorial'),1500);
+
   }catch(err){
     status.textContent='Could not connect — try again. ('+err.message+')';
+    bleDevice    = null;
+    cmdChar      = null;
+    bleConnected = false;
   }
 }
 // Receives voltage direction from Arduino
