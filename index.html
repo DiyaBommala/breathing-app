@@ -245,12 +245,21 @@ function onDirectionReceived(event){
   const currentPhase=phases[phaseIdx].name;
   let pace='';
 
-  // HOLD — no feedback at all, clear label and return
-  if(currentPhase==='HOLD'){
+if(currentPhase==='HOLD'){
+  if(dir==='DROPPING'||dir==='RISING'){
+    holdChangeCount++;
+    if(holdChangeCount>=5){
+      el.textContent='KEEP HOLDING!';
+      tooFastCount++;
+    }
+  } else {
+    holdChangeCount=0;
     el.textContent='';
-    stableCountApp=0;
-    return;
   }
+  stableCountApp=0;
+  tooFastCountApp=0;
+  return;
+}
 
   if(currentPhase==='INHALE'){
     // voltage should be DROPPING during inhale
