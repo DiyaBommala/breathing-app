@@ -203,10 +203,9 @@ let tooFastCount=0,tooSlowCount=0;
 let stableCountApp=0;
 let tooFastCountApp=0;
 let holdChangeCount=0;
+let phaseStartTime=0;
 
-// TOO FAST needs 4 consecutive wrong direction readings
-// TOO SLOW needs 2 consecutive stable readings — more sensitive
-const TOO_FAST_THRESHOLD = 4;
+const TOO_FAST_THRESHOLD    = 4;
 const STABLE_SLOW_THRESHOLD = 2;
 
 function goTo(id){
@@ -216,38 +215,28 @@ function goTo(id){
 
 async function startScan(){
   const status=document.getElementById('scan-status');
-
-  // fully reset all BLE state before every new scan
   bleDevice    = null;
   cmdChar      = null;
   bleConnected = false;
 
   try{
     status.textContent='Scanning for BreathingDevice...';
-
     const device = await navigator.bluetooth.requestDevice({
       filters:[{name:DEVICE_NAME}],
       optionalServices:[SERVICE_UUID]
     });
-
     bleDevice = device;
     status.textContent='Connecting...';
-
     const server  = await bleDevice.gatt.connect();
     const service = await server.getPrimaryService(SERVICE_UUID);
-
     const dirChar = await service.getCharacteristic(DIR_UUID);
     await dirChar.startNotifications();
     dirChar.addEventListener('characteristicvaluechanged',onDirectionReceived);
-
     cmdChar      = await service.getCharacteristic(CMD_UUID);
     bleConnected = true;
-
     bleDevice.addEventListener('gattserverdisconnected',onDisconnected);
-
     goTo('s-connected');
     setTimeout(()=>goTo('s-tutorial'),1500);
-
   }catch(err){
     status.textContent='Could not connect — try again. ('+err.message+')';
     bleDevice    = null;
@@ -256,14 +245,9 @@ async function startScan(){
   }
 }
 
-// Receives voltage direction from Arduino
-// DROPPING = inhaling, RISING = exhaling, STABLE = not moving
-// TOO FAST: wrong direction for 4 consecutive readings
-// TOO SLOW: stable for 2 consecutive readings — sensitive
-// KEEP HOLDING: moving for 5 consecutive readings during HOLD
 function onDirectionReceived(event){
   const dir=new TextDecoder().decode(event.target.value);
-  console.log('Phase:', phases[phaseIdx]?.name, '| Dir:', dir);
+  console.log('RECEIVED:', dir, '| phase:', phases[phaseIdx]?.name);
   const el=document.getElementById('pace-lbl');
   if(!el) return;
   if(phaseIdx>=phases.length) return;
@@ -271,20 +255,18 @@ function onDirectionReceived(event){
   const currentPhase=phases[phaseIdx].name;
   let pace='';
 
-  // HOLD phase — any movement triggers KEEP HOLDING!
+  // HOLD phase — show KEEP HOLDING! 2 seconds into phase
+  // based on time not direction readings
   if(currentPhase==='HOLD'){
-    if(dir==='DROPPING'||dir==='RISING'){
-      holdChangeCount++;
-      if(holdChangeCount>=5){
-        el.textContent='KEEP HOLDING!';
-        tooFastCount++;
-      }
+    const timeInPhase = Date.now() - phaseStartTime;
+    if(timeInPhase >= 2000){
+      el.textContent='KEEP HOLDING!';
     } else {
-      holdChangeCount=0;
       el.textContent='';
     }
     stableCountApp=0;
     tooFastCountApp=0;
+    holdChangeCount=0;
     return;
   }
 
@@ -292,16 +274,13 @@ function onDirectionReceived(event){
 
   if(currentPhase==='INHALE'){
     if(dir==='DROPPING'){
-      // correctly inhaling — reset everything
       tooFastCountApp=0;
       stableCountApp=0;
     } else if(dir==='RISING'){
-      // already exhaling — skipped ahead = TOO FAST
       tooFastCountApp++;
       stableCountApp=0;
       if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
     } else if(dir==='STABLE'){
-      // stopped inhaling too early = TOO FAST
       tooFastCountApp++;
       stableCountApp=0;
       if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
@@ -310,21 +289,13 @@ function onDirectionReceived(event){
 
   if(currentPhase==='EXHALE'){
     if(dir==='RISING'){
-      // correctly exhaling — reset everything
       tooFastCountApp=0;
       stableCountApp=0;
     } else if(dir==='DROPPING'){
-      tooFastCountApp++;
-      stableCountApp=0;
-      if(tooFastCountApp>=2 && tooFastCountApp<=4){
-        // brief dropping at start = still transitioning from inhale = TOO SLOW
-        pace='TOO SLOW';
-      } else if(tooFastCountApp>4){
-        // sustained dropping = actively inhaling during exhale = TOO FAST
-        pace='TOO FAST';
-      }
+      stableCountApp++;
+      tooFastCountApp=0;
+      if(stableCountApp>=STABLE_SLOW_THRESHOLD) pace='TOO SLOW';
     } else if(dir==='STABLE'){
-      // stopped exhaling too early = TOO FAST
       tooFastCountApp++;
       stableCountApp=0;
       if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
@@ -335,9 +306,13 @@ function onDirectionReceived(event){
   if(pace==='TOO FAST') tooFastCount++;
   if(pace==='TOO SLOW') tooSlowCount++;
 }
-  
+
 async function sendCommand(cmd){
-  if(!cmdChar||!bleConnected) return;
+  console.log('Sending command:', cmd);
+  if(!cmdChar||!bleConnected){
+    console.log('cmdChar or bleConnected is null');
+    return;
+  }
   try{ await cmdChar.writeValue(new TextEncoder().encode(cmd)); }
   catch(e){ console.log('Send error:',e); }
 }
@@ -412,6 +387,7 @@ function startExercise(){
   phaseIdx=0; breathCount=0;
   tooFastCount=0; tooSlowCount=0;
   stableCountApp=0; tooFastCountApp=0; holdChangeCount=0;
+  phaseStartTime=0;
   circleSize=120; targetSize=120;
   sendCommand('START');
   startCircleAnimation();
@@ -428,6 +404,7 @@ function runPhase(){
   stableCountApp=0;
   tooFastCountApp=0;
   holdChangeCount=0;
+  phaseStartTime=Date.now(); // track when phase started
   targetSize=p.target;
 
   if(currentEx.cyclic&&!p.finalHold){
