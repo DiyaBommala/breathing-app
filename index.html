@@ -37,6 +37,7 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
 .timer-num{color:#fff;font-size:28px;font-weight:700}
 .timer-label{color:rgba(255,255,255,.5);font-size:11px;margin-top:2px}
 .pace-label{font-size:16px;font-weight:600;letter-spacing:2px;color:#ff4444;min-height:24px;margin-top:8px}
+.debug-lbl{color:#666;font-size:11px;margin-top:4px;min-height:16px}
 .breath-counter{color:#555;font-size:12px;margin-top:6px;min-height:18px}
 .ex-name-label{color:#444;font-size:12px;margin-top:4px}
 .stat-card{width:100%;background:#161625;border-radius:12px;padding:16px;margin-bottom:12px}
@@ -141,6 +142,7 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
     </div>
   </div>
   <div class="pace-label" id="pace-lbl"></div>
+  <div class="debug-lbl" id="debug-lbl"></div>
   <div class="breath-counter" id="breath-counter"></div>
   <div class="ex-name-label" id="ex-name-lbl">Box Breathing</div>
   <div class="btn-row" style="margin-top:24px">
@@ -247,7 +249,11 @@ async function startScan(){
 
 function onDirectionReceived(event){
   const dir=new TextDecoder().decode(event.target.value);
-  console.log('RECEIVED:', dir, '| phase:', phases[phaseIdx]?.name);
+
+  // debug label — shows raw direction and phase on screen
+  const dbg=document.getElementById('debug-lbl');
+  if(dbg) dbg.textContent='DIR:'+dir+' PHASE:'+phases[phaseIdx]?.name;
+
   const el=document.getElementById('pace-lbl');
   if(!el) return;
   if(phaseIdx>=phases.length) return;
@@ -256,7 +262,6 @@ function onDirectionReceived(event){
   let pace='';
 
   // HOLD phase — show KEEP HOLDING! 2 seconds into phase
-  // based on time not direction readings
   if(currentPhase==='HOLD'){
     const timeInPhase = Date.now() - phaseStartTime;
     if(timeInPhase >= 2000){
@@ -274,13 +279,16 @@ function onDirectionReceived(event){
 
   if(currentPhase==='INHALE'){
     if(dir==='DROPPING'){
+      // correctly inhaling — reset counters
       tooFastCountApp=0;
       stableCountApp=0;
     } else if(dir==='RISING'){
+      // exhaling too early = TOO FAST
       tooFastCountApp++;
       stableCountApp=0;
       if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
     } else if(dir==='STABLE'){
+      // stopped inhaling too early = TOO FAST
       tooFastCountApp++;
       stableCountApp=0;
       if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
@@ -289,13 +297,16 @@ function onDirectionReceived(event){
 
   if(currentPhase==='EXHALE'){
     if(dir==='RISING'){
+      // correctly exhaling — reset counters
       tooFastCountApp=0;
       stableCountApp=0;
     } else if(dir==='DROPPING'){
+      // still inhaling from previous phase = TOO SLOW
       stableCountApp++;
       tooFastCountApp=0;
       if(stableCountApp>=STABLE_SLOW_THRESHOLD) pace='TOO SLOW';
     } else if(dir==='STABLE'){
+      // stopped exhaling too early = TOO FAST
       tooFastCountApp++;
       stableCountApp=0;
       if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
@@ -362,6 +373,7 @@ function showCountdown(callback){
   document.getElementById('breath-counter').textContent='';
   document.getElementById('ex-name-lbl').textContent=currentEx.name;
   document.getElementById('pace-lbl').textContent='';
+  document.getElementById('debug-lbl').textContent='';
   circle.style.backgroundColor='#333';
   circle.style.width='160px';
   circle.style.height='160px';
@@ -401,10 +413,11 @@ function runPhase(){
   lbl.textContent=p.name; lbl.style.color=p.color;
   document.getElementById('circle').style.backgroundColor=p.color;
   document.getElementById('pace-lbl').textContent='';
+  document.getElementById('debug-lbl').textContent='';
   stableCountApp=0;
   tooFastCountApp=0;
   holdChangeCount=0;
-  phaseStartTime=Date.now(); // track when phase started
+  phaseStartTime=Date.now();
   targetSize=p.target;
 
   if(currentEx.cyclic&&!p.finalHold){
