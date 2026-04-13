@@ -36,7 +36,7 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
 .circle{border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:background-color .5s ease}
 .timer-num{color:#fff;font-size:28px;font-weight:700}
 .timer-label{color:rgba(255,255,255,.5);font-size:11px;margin-top:2px}
-.pace-label{font-size:16px;font-weight:600;letter-spacing:2px;color:#ff4444;min-height:24px;margin-top:8px}
+.pace-label{font-size:14px;font-weight:600;letter-spacing:1px;color:#ff4444;min-height:24px;margin-top:8px}
 .debug-lbl{color:#666;font-size:11px;margin-top:4px;min-height:16px}
 .breath-counter{color:#555;font-size:12px;margin-top:6px;min-height:18px}
 .ex-name-label{color:#444;font-size:12px;margin-top:4px}
@@ -99,7 +99,7 @@ body{background:#0a0a14;color:#fff;display:flex;flex-direction:column;align-item
   <div class="tut-row"><div class="tut-dot" style="background:#3399ff"></div><div class="tut-text">Blue — Exhale slowly through your mouth</div></div>
   <div class="info-box">
     <div class="info-label">FEEDBACK</div>
-    <div class="info-text">TOO FAST, TOO SLOW, or KEEP HOLDING! appears below the circle based on your breathing.</div>
+    <div class="info-text">Feedback appears below the circle to guide your breathing pace.</div>
   </div>
   <button class="btn btn-primary" onclick="goTo('s-exercises')">Choose an exercise</button>
   <button class="btn btn-ghost" onclick="goTo('s-history');loadHistory()">View history</button>
@@ -202,13 +202,13 @@ let phases=[],phaseIdx=0,phaseTimer=null,countdownInterval=null;
 let circleAnim=null,circleSize=120,targetSize=120;
 let breathCount=0,countdown=4;
 let tooFastCount=0,tooSlowCount=0;
-let stableCountApp=0;
-let tooFastCountApp=0;
-let holdChangeCount=0;
 let phaseStartTime=0;
 
-const TOO_FAST_THRESHOLD    = 4;
-const STABLE_SLOW_THRESHOLD = 2;
+// direction tracking
+let hadDrop  = false;
+let hadRise  = false;
+let dirCount = 0;
+let lastDir  = '';
 
 function goTo(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -250,7 +250,6 @@ async function startScan(){
 function onDirectionReceived(event){
   const dir=new TextDecoder().decode(event.target.value);
 
-  // debug label — shows raw direction and phase on screen
   const dbg=document.getElementById('debug-lbl');
   if(dbg) dbg.textContent='DIR:'+dir+' PHASE:'+phases[phaseIdx]?.name;
 
@@ -259,63 +258,110 @@ function onDirectionReceived(event){
   if(phaseIdx>=phases.length) return;
 
   const currentPhase=phases[phaseIdx].name;
+  const exName=currentEx.name;
+
+  // track what happened in current phase
+  if(dir==='DROPPING') hadDrop=true;
+  if(dir==='RISING')   hadRise=true;
+
+  // count consecutive same direction readings
+  if(dir===lastDir){
+    dirCount++;
+  } else {
+    dirCount=1;
+    lastDir=dir;
+  }
+
+  // only give feedback after 5 consecutive readings
+  if(dirCount < 5) return;
+
   let pace='';
 
-  // HOLD phase — show KEEP HOLDING! 2 seconds into phase
-  if(currentPhase==='HOLD'){
-    const timeInPhase = Date.now() - phaseStartTime;
-    if(timeInPhase >= 2000){
-      el.textContent='KEEP HOLDING!';
-    } else {
-      el.textContent='';
-    }
-    stableCountApp=0;
-    tooFastCountApp=0;
-    holdChangeCount=0;
-    return;
+  // determine hold type — 1=after inhale, 2=after exhale
+  let holdType=0;
+  if(currentPhase==='HOLD'&&phaseIdx>0){
+    holdType=phases[phaseIdx-1].name==='INHALE'?1:2;
   }
 
-  holdChangeCount=0;
+  // ═══════════════════════════════════════════════════
+  // BOX BREATHING
+  // ═══════════════════════════════════════════════════
+  if(exName==='Box Breathing'){
 
-  if(currentPhase==='INHALE'){
-    if(dir==='DROPPING'){
-      // correctly inhaling — reset counters
-      tooFastCountApp=0;
-      stableCountApp=0;
-    } else if(dir==='RISING'){
-      // exhaling too early = TOO FAST
-      tooFastCountApp++;
-      stableCountApp=0;
-      if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
-    } else if(dir==='STABLE'){
-      // stopped inhaling too early = TOO FAST
-      tooFastCountApp++;
-      stableCountApp=0;
-      if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
+    if(currentPhase==='INHALE'){
+      if(dir==='DROPPING')              pace='';
+      if(dir==='RISING')                pace='Slow down, keep inhaling';
+      if(dir==='STABLE'&&!hadDrop)      pace='Speed up, start inhaling';
+      if(dir==='STABLE'&& hadDrop)      pace='Slow down, keep inhaling';
+    }
+
+    if(currentPhase==='HOLD'&&holdType===1){
+      if(dir==='DROPPING')              pace='Speed up, start holding';
+      if(dir==='RISING')                pace='Slow down, keep holding';
+      if(dir==='STABLE')                pace='';
+    }
+
+    if(currentPhase==='EXHALE'){
+      if(dir==='DROPPING')              pace='Slow down, keep exhaling';
+      if(dir==='RISING')                pace='';
+      if(dir==='STABLE'&&!hadRise)      pace='Speed up, start exhaling';
+      if(dir==='STABLE'&& hadRise)      pace='Slow down, keep exhaling';
+    }
+
+    if(currentPhase==='HOLD'&&holdType===2){
+      if(dir==='DROPPING')              pace='Slow down, keep holding';
+      if(dir==='RISING')                pace='Speed up, start holding';
+      if(dir==='STABLE')                pace='';
     }
   }
 
-  if(currentPhase==='EXHALE'){
-    if(dir==='RISING'){
-      // correctly exhaling — reset counters
-      tooFastCountApp=0;
-      stableCountApp=0;
-    } else if(dir==='DROPPING'){
-      // still inhaling from previous phase = TOO SLOW
-      stableCountApp++;
-      tooFastCountApp=0;
-      if(stableCountApp>=STABLE_SLOW_THRESHOLD) pace='TOO SLOW';
-    } else if(dir==='STABLE'){
-      // stopped exhaling too early = TOO FAST
-      tooFastCountApp++;
-      stableCountApp=0;
-      if(tooFastCountApp>=TOO_FAST_THRESHOLD) pace='TOO FAST';
+  // ═══════════════════════════════════════════════════
+  // 4-7-8 BREATHING
+  // ═══════════════════════════════════════════════════
+  if(exName==='4-7-8 Breathing'){
+
+    if(currentPhase==='INHALE'){
+      if(dir==='DROPPING')              pace='';
+      if(dir==='RISING')                pace='Speed up, start inhaling';
+      if(dir==='STABLE')                pace='Slow down, keep inhaling';
+    }
+
+    if(currentPhase==='HOLD'){
+      if(dir==='DROPPING')              pace='Speed up, start holding';
+      if(dir==='RISING')                pace='Slow down, keep holding';
+      if(dir==='STABLE')                pace='';
+    }
+
+    if(currentPhase==='EXHALE'){
+      if(dir==='DROPPING')              pace='Slow down, keep exhaling';
+      if(dir==='RISING')                pace='';
+      if(dir==='STABLE')                pace='Speed up, start exhaling';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════
+  // CYCLIC HYPERVENTILATION
+  // ═══════════════════════════════════════════════════
+  if(exName==='Cyclic Hyperventilation'){
+
+    if(currentPhase==='INHALE'){
+      if(dir==='DROPPING')              pace='';
+      if(dir==='RISING'&& hadDrop)      pace='Slow down, keep inhaling';
+      if(dir==='RISING'&&!hadDrop)      pace='Speed up, start inhaling';
+      if(dir==='STABLE')                pace='Slow down, keep inhaling';
+    }
+
+    if(currentPhase==='EXHALE'){
+      if(dir==='DROPPING'&&!hadRise)    pace='Speed up, start exhaling';
+      if(dir==='DROPPING'&& hadRise)    pace='Slow down, keep exhaling';
+      if(dir==='STABLE')                pace='Slow down, keep exhaling';
+      if(dir==='RISING')                pace='';
     }
   }
 
   el.textContent=pace;
-  if(pace==='TOO FAST') tooFastCount++;
-  if(pace==='TOO SLOW') tooSlowCount++;
+  if(pace.includes('Speed up')) tooSlowCount++;
+  if(pace.includes('Slow down')) tooFastCount++;
 }
 
 async function sendCommand(cmd){
@@ -398,7 +444,7 @@ function startExercise(){
   phases=buildPhases(currentEx);
   phaseIdx=0; breathCount=0;
   tooFastCount=0; tooSlowCount=0;
-  stableCountApp=0; tooFastCountApp=0; holdChangeCount=0;
+  hadDrop=false; hadRise=false; dirCount=0; lastDir='';
   phaseStartTime=0;
   circleSize=120; targetSize=120;
   sendCommand('START');
@@ -414,9 +460,12 @@ function runPhase(){
   document.getElementById('circle').style.backgroundColor=p.color;
   document.getElementById('pace-lbl').textContent='';
   document.getElementById('debug-lbl').textContent='';
-  stableCountApp=0;
-  tooFastCountApp=0;
-  holdChangeCount=0;
+
+  // reset direction tracking for each new phase
+  hadDrop=false;
+  hadRise=false;
+  dirCount=0;
+  lastDir='';
   phaseStartTime=Date.now();
   targetSize=p.target;
 
