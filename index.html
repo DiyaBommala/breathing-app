@@ -251,7 +251,7 @@ function onDirectionReceived(event){
   const dir=new TextDecoder().decode(event.target.value);
 
   const dbg=document.getElementById('debug-lbl');
- // if(dbg) dbg.textContent='DIR:'+dir+' PHASE:'+phases[phaseIdx]?.name;
+  if(dbg) dbg.textContent='DIR:'+dir+' PHASE:'+phases[phaseIdx]?.name;
 
   const el=document.getElementById('pace-lbl');
   if(!el) return;
@@ -273,7 +273,7 @@ function onDirectionReceived(event){
   }
 
   // only give feedback after 5 consecutive readings
-  if(dirCount < 5) return;
+ // if(dirCount < 5) return;
 
   let pace='';
 
@@ -360,7 +360,6 @@ function onDirectionReceived(event){
   }
 
  el.textContent=pace;
-if(dbg) dbg.textContent='DIR:'+dir+' PHASE:'+currentPhase+' COUNT:'+dirCount+' PACE:'+pace;
   if(pace.includes('Speed up')) tooSlowCount++;
   if(pace.includes('Slow down')) tooFastCount++;
 }
