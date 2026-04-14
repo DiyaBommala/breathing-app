@@ -210,6 +210,7 @@ let hadRise  = false;
 let dirCount = 0;
 let lastDir  = '';
 let countdownActive = false;
+let lastCyclicFeedbackTime = 0;
 
 
 function goTo(id){
@@ -386,6 +387,7 @@ if(pace!==''){
       el.textContent='';
     }
   }
+}
 
 async function sendCommand(cmd){
   console.log('Sending command:', cmd);
