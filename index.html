@@ -350,15 +350,15 @@ function onDirectionReceived(event){
 
     if(currentPhase==='INHALE'){
       if(dir==='DROPPING')              pace='';
-      if(dir==='RISING'&& hadDrop)      pace='Keep inhaling';
-      if(dir==='RISING'&&!hadDrop)      pace='Start inhaling';
-      if(dir==='STABLE')                pace='Keep inhaling';
+      if(dir==='RISING'&& hadDrop)      pace='Match pace';
+      if(dir==='RISING'&&!hadDrop)      pace='Match pace';
+      if(dir==='STABLE')                pace='Match pace';
     }
 
     if(currentPhase==='EXHALE'){
-      if(dir==='DROPPING'&&!hadRise)    pace='Start exhaling';
-      if(dir==='DROPPING'&& hadRise)    pace='Keep exhaling';
-      if(dir==='STABLE')                pace='Keep exhaling';
+      if(dir==='DROPPING'&&!hadRise)    pace='Match pace';
+      if(dir==='DROPPING'&& hadRise)    pace='Match pace';
+      if(dir==='STABLE')                pace='Match pace';
       if(dir==='RISING')                pace='';
     }
   }
@@ -381,12 +381,7 @@ if(pace!==''){
     }
     if(dbg) dbg.textContent='DIR:'+dir+' PHASE:'+currentPhase+' PACE:'+pace;
     tooFastCount++;
-  } else {
-    // clear feedback when direction is correct
-    if(exName!=='Cyclic Hyperventilation'){
-      el.textContent='';
-    }
-  }
+  } 
 }
 
 async function sendCommand(cmd){
@@ -473,7 +468,7 @@ function startExercise(){
   phases=buildPhases(currentEx);
   phaseIdx=0; breathCount=0;
   tooFastCount=0; tooSlowCount=0;
-  hadDrop=false; hadRise=false; dirCount=0; lastDir='';
+  hadDrop=false; hadRise=false; dirCount=0; lastDir=''; lastCyclicFeedbackTime=0;
   phaseStartTime=0;
   circleSize=120; targetSize=120;
   sendCommand('START');
