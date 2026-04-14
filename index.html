@@ -537,10 +537,10 @@ function startCircleAnimation(){
 }
 
 function feedbackMessage(){
-  if(tooFastCount>=3&&tooSlowCount>=3) return 'Try to match the pace of the circle more consistently next time.';
-  if(tooFastCount>=3) return 'Try to slow down your breathing a little next time.';
-  if(tooSlowCount>=3) return 'Try to speed up your breathing a little next time.';
-  return 'Great session — your pace was well matched!';
+  if(tooFastCount===0) return 'Great session — your breathing was perfectly on pace!';
+  if(tooFastCount<=4)  return 'Good session — just a few small adjustments needed next time.';
+  if(tooFastCount<=10) return 'Nice effort — try to follow the circle more closely next time.';
+  return 'Keep practicing — focus on matching the pace of the circle each phase.';
 }
 
 function stopExercise(wasComplete){
