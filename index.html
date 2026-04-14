@@ -259,6 +259,7 @@ function onDirectionReceived(event){
   const el=document.getElementById('pace-lbl');
   if(!el) return;
   if(countdownActive) return; // ← add here
+  if(phases.length===0) return;  // ← this might be missing
   if(phaseIdx>=phases.length) return;
 
   const currentPhase=phases[phaseIdx].name;
