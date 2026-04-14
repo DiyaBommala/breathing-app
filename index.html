@@ -296,12 +296,12 @@ function onDirectionReceived(event){
     if(currentPhase==='INHALE'){
       if(dir==='DROPPING')              pace='';
       if(dir==='RISING')                pace='Keep inhaling';
-      if(dir==='STABLE'&&!hadDrop)      pace='Start inhaling';
+      if(dir==='STABLE'&&!hadDrop)      pace='Keep inhaling';
       if(dir==='STABLE'&& hadDrop)      pace='Keep inhaling';
     }
 
     if(currentPhase==='HOLD'&&holdType===1){
-      if(dir==='DROPPING')              pace='Start holding';
+      if(dir==='DROPPING')              pace='Keep holding';
       if(dir==='RISING')                pace='Keep holding';
       if(dir==='STABLE')                pace='';
     }
@@ -309,13 +309,13 @@ function onDirectionReceived(event){
     if(currentPhase==='EXHALE'){
       if(dir==='DROPPING')              pace='Keep exhaling';
       if(dir==='RISING')                pace='';
-      if(dir==='STABLE'&&!hadRise)      pace='Start exhaling';
+      if(dir==='STABLE'&&!hadRise)      pace='Keep exhaling';
       if(dir==='STABLE'&& hadRise)      pace='Keep exhaling';
     }
 
     if(currentPhase==='HOLD'&&holdType===2){
       if(dir==='DROPPING')              pace='Keep holding';
-      if(dir==='RISING')                pace='Start holding';
+      if(dir==='RISING')                pace='Keep holding';
       if(dir==='STABLE')                pace='';
     }
   }
@@ -327,12 +327,12 @@ function onDirectionReceived(event){
 
     if(currentPhase==='INHALE'){
       if(dir==='DROPPING')              pace='';
-      if(dir==='RISING')                pace='Start inhaling';
+      if(dir==='RISING')                pace='Keep inhaling';
       if(dir==='STABLE')                pace='Keep inhaling';
     }
 
     if(currentPhase==='HOLD'){
-      if(dir==='DROPPING')              pace='Start holding';
+      if(dir==='DROPPING')              pace='Keep holding';
       if(dir==='RISING')                pace='Keep holding';
       if(dir==='STABLE')                pace='';
     }
@@ -340,7 +340,7 @@ function onDirectionReceived(event){
     if(currentPhase==='EXHALE'){
       if(dir==='DROPPING')              pace='Keep exhaling';
       if(dir==='RISING')                pace='';
-      if(dir==='STABLE')                pace='Start exhaling';
+      if(dir==='STABLE')                pace='Keep exhaling';
     }
   }
 
