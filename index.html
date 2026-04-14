@@ -209,6 +209,9 @@ let hadDrop  = false;
 let hadRise  = false;
 let dirCount = 0;
 let lastDir  = '';
+let lastCyclicFeedbackTime = 0; // ← add here
+
+
 
 function goTo(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -251,14 +254,18 @@ function onDirectionReceived(event){
   const dir=new TextDecoder().decode(event.target.value);
 
   const dbg=document.getElementById('debug-lbl');
-  if(dbg) dbg.textContent='DIR:'+dir+' PHASE:'+phases[phaseIdx]?.name;
 
   const el=document.getElementById('pace-lbl');
   if(!el) return;
+
+  // dont show feedback during countdown or if no phases yet
+  if(phases.length===0) return;
   if(phaseIdx>=phases.length) return;
 
   const currentPhase=phases[phaseIdx].name;
   const exName=currentEx.name;
+
+  if(dbg) dbg.textContent='DIR:'+dir+' PHASE:'+currentPhase+' COUNT:'+dirCount;
 
   // track what happened in current phase
   if(dir==='DROPPING') hadDrop=true;
@@ -272,8 +279,8 @@ function onDirectionReceived(event){
     lastDir=dir;
   }
 
-  // only give feedback after 5 consecutive readings
- // if(dirCount < 5) return;
+  // if feedback already showing for this phase — dont overwrite it
+  if(el.textContent!=='') return;
 
   let pace='';
 
@@ -283,34 +290,30 @@ function onDirectionReceived(event){
     holdType=phases[phaseIdx-1].name==='INHALE'?1:2;
   }
 
-  // ═══════════════════════════════════════════════════
+ // ═══════════════════════════════════════════════════
   // BOX BREATHING
   // ═══════════════════════════════════════════════════
   if(exName==='Box Breathing'){
-
     if(currentPhase==='INHALE'){
       if(dir==='DROPPING')              pace='';
-      if(dir==='RISING')                pace='Slow down, keep inhaling';
-      if(dir==='STABLE'&&!hadDrop)      pace='Speed up, start inhaling';
-      if(dir==='STABLE'&& hadDrop)      pace='Slow down, keep inhaling';
+      if(dir==='RISING')                pace='Keep inhaling';
+      if(dir==='STABLE'&&!hadDrop)      pace='Start inhaling';
+      if(dir==='STABLE'&& hadDrop)      pace='Keep inhaling';
     }
-
     if(currentPhase==='HOLD'&&holdType===1){
-      if(dir==='DROPPING')              pace='Speed up, start holding';
-      if(dir==='RISING')                pace='Slow down, keep holding';
+      if(dir==='DROPPING')              pace='Start holding';
+      if(dir==='RISING')                pace='Keep holding';
       if(dir==='STABLE')                pace='';
     }
-
     if(currentPhase==='EXHALE'){
-      if(dir==='DROPPING')              pace='Slow down, keep exhaling';
+      if(dir==='DROPPING')              pace='Keep exhaling';
       if(dir==='RISING')                pace='';
-      if(dir==='STABLE'&&!hadRise)      pace='Speed up, start exhaling';
-      if(dir==='STABLE'&& hadRise)      pace='Slow down, keep exhaling';
+      if(dir==='STABLE'&&!hadRise)      pace='Start exhaling';
+      if(dir==='STABLE'&& hadRise)      pace='Keep exhaling';
     }
-
     if(currentPhase==='HOLD'&&holdType===2){
-      if(dir==='DROPPING')              pace='Slow down, keep holding';
-      if(dir==='RISING')                pace='Speed up, start holding';
+      if(dir==='DROPPING')              pace='Keep holding';
+      if(dir==='RISING')                pace='Start holding';
       if(dir==='STABLE')                pace='';
     }
   }
@@ -319,49 +322,49 @@ function onDirectionReceived(event){
   // 4-7-8 BREATHING
   // ═══════════════════════════════════════════════════
   if(exName==='4-7-8 Breathing'){
-
     if(currentPhase==='INHALE'){
       if(dir==='DROPPING')              pace='';
-      if(dir==='RISING')                pace='Speed up, start inhaling';
-      if(dir==='STABLE')                pace='Slow down, keep inhaling';
+      if(dir==='RISING')                pace='Start inhaling';
+      if(dir==='STABLE')                pace='Keep inhaling';
     }
-
     if(currentPhase==='HOLD'){
-      if(dir==='DROPPING')              pace='Speed up, start holding';
-      if(dir==='RISING')                pace='Slow down, keep holding';
+      if(dir==='DROPPING')              pace='Start holding';
+      if(dir==='RISING')                pace='Keep holding';
       if(dir==='STABLE')                pace='';
     }
-
     if(currentPhase==='EXHALE'){
-      if(dir==='DROPPING')              pace='Slow down, keep exhaling';
+      if(dir==='DROPPING')              pace='Keep exhaling';
       if(dir==='RISING')                pace='';
-      if(dir==='STABLE')                pace='Speed up, start exhaling';
+      if(dir==='STABLE')                pace='Start exhaling';
     }
   }
 
   // ═══════════════════════════════════════════════════
   // CYCLIC HYPERVENTILATION
+  // shows "Keep up with pace" for 5 seconds
+  // can pop up again after 5 seconds if still off pace
   // ═══════════════════════════════════════════════════
-  if(exName==='Cyclic Hyperventilation'){
-
-    if(currentPhase==='INHALE'){
-      if(dir==='DROPPING')              pace='';
-      if(dir==='RISING'&& hadDrop)      pace='Slow down, keep inhaling';
-      if(dir==='RISING'&&!hadDrop)      pace='Speed up, start inhaling';
-      if(dir==='STABLE')                pace='Slow down, keep inhaling';
+ if(pace!==''){
+    if(exName==='Cyclic Hyperventilation'){
+      const now = Date.now();
+      if(el.textContent==='' || now - lastCyclicFeedbackTime >= 5000){
+        el.textContent=pace;
+        lastCyclicFeedbackTime=now;
+        setTimeout(()=>{
+          if(phases[phaseIdx]?.name===currentPhase){
+            el.textContent='';
+          }
+        },5000);
+      }
+    } else {
+      // for other exercises — stays for whole phase
+      if(el.textContent===''){
+        el.textContent=pace;
+      }
     }
-
-    if(currentPhase==='EXHALE'){
-      if(dir==='DROPPING'&&!hadRise)    pace='Speed up, start exhaling';
-      if(dir==='DROPPING'&& hadRise)    pace='Slow down, keep exhaling';
-      if(dir==='STABLE')                pace='Slow down, keep exhaling';
-      if(dir==='RISING')                pace='';
-    }
+    if(dbg) dbg.textContent='DIR:'+dir+' PHASE:'+currentPhase+' PACE:'+pace;
+    tooFastCount++; // count any feedback shown as an issue
   }
-
- el.textContent=pace;
-  if(pace.includes('Speed up')) tooSlowCount++;
-  if(pace.includes('Slow down')) tooFastCount++;
 }
 
 async function sendCommand(cmd){
@@ -444,7 +447,7 @@ function startExercise(){
   phases=buildPhases(currentEx);
   phaseIdx=0; breathCount=0;
   tooFastCount=0; tooSlowCount=0;
-  hadDrop=false; hadRise=false; dirCount=0; lastDir='';
+  hadDrop=false; hadRise=false; dirCount=0; lastDir='';lastCyclicFeedbackTime=0;
   phaseStartTime=0;
   circleSize=120; targetSize=120;
   sendCommand('START');
@@ -466,6 +469,7 @@ function runPhase(){
   hadRise=false;
   dirCount=0;
   lastDir='';
+  lastCyclicFeedbackTime=0;
   phaseStartTime=Date.now();
   targetSize=p.target;
 
@@ -512,9 +516,9 @@ function startCircleAnimation(){
 }
 
 function feedbackMessage(){
-  if(tooFastCount>=3&&tooSlowCount>=3) return 'Try to match the pace of the circle more consistently next time.';
-  if(tooFastCount>=3) return 'Try to slow down your breathing a little next time.';
-  if(tooSlowCount>=3) return 'Try to speed up your breathing a little next time.';
+  if(tooFastCount>=3) return 'Try to match the pace of the circle more consistently next time.';
+//  if(tooFastCount>=3) return 'Try to slow down your breathing a little next time.';
+//  if(tooSlowCount>=3) return 'Try to speed up your breathing a little next time.';
   return 'Great session — your pace was well matched!';
 }
 
